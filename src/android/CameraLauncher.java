@@ -114,6 +114,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private Uri scanMe;                     // Uri of image to be added to content store
     private Uri croppedUri;
 
+    private static int activityRef = -1;     // ref to the activity this activity started
+
 
     protected void getReadPermission(int requestCode)
     {
@@ -198,6 +200,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             callbackContext.sendPluginResult(r);
 
             return true;
+        } else if (action.equals("close")) {
+            this.close();
         }
         return false;
     }
@@ -264,6 +268,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             PackageManager mPm = this.cordova.getActivity().getPackageManager();
             if(intent.resolveActivity(mPm) != null)
             {
+                activityRef = (CAMERA + 1) * 16 + returnType + 1;
 
                 this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
             }
@@ -275,6 +280,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 //        else
 //            LOG.d(LOG_TAG, "ERROR: You must use the CordovaInterface for this to work correctly. Please implement it in your activity");
     }
+
+    public void close() {
+        if (this.cordova != null) {
+            this.cordova.getActivity().finishActivity(activityRef);
+            this.failPicture("Camera cancelled.");
+        }
+    }
+
 
     /**
      * Create a file in the applications temporary directory based upon the supplied encoding.
@@ -503,7 +516,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     } else {
                         writeUncompressedImage(this.imageUri, uri);
                     }
-                    
+
                     this.callbackContext.success(uri.toString());
                 }
             } else {
