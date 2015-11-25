@@ -182,11 +182,11 @@ cameraExport.cleanup = function(successCallback, errorCallback) {
 };
 
 /**
- * Close the camera if it is opened by
- * calling [`camera.getPicture`]{@link module:camera.getPicture}.
+ * Close the camera if it is opened by calling
+ * [`camera.getPicture`]{@link module:camera.getPicture}.
  *
  * #### iOS
- * Applies only when the value of `Camera.sourceType` equals `Camera.PictureSourceType.CAMERA`
+ * Applies when the value of `Camera.sourceType` equals `Camera.PictureSourceType.CAMERA`
  * or `Camera.PictureSourceType.PHOTOLIBRARY`.
  *
  * #### Android
