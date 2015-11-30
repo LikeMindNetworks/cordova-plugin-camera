@@ -1,9 +1,9 @@
 {
-  "name": "cordova-plugin-camera",
+  "name": "cordova-plugin-camera-likemindnetworks",
   "version": "2.0.0",
-  "description": "Cordova Camera Plugin",
+  "description": "Cordova Camera Plugin @ LikeMindNetworks",
   "cordova": {
-    "id": "cordova-plugin-camera",
+    "id": "cordova-plugin-camera-likemindnetworks",
     "platforms": [
       "firefoxos",
       "android",
@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apache/cordova-plugin-camera"
+    "url": "https://github.com/LikeMindNetworks/cordova-plugin-camera"
   },
   "keywords": [
     "cordova",
