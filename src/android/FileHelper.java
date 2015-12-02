@@ -33,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
+import java.util.Scanner;
 
 public class FileHelper {
     private static final String LOG_TAG = "FileUtils";
@@ -76,12 +77,22 @@ public class FileHelper {
         return FileHelper.getRealPath(Uri.parse(uriString), cordova);
     }
 
+    private static String extractDocumentIdFromExternalContentURI(String uri) {
+        final String externalContentURI = MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString();
+
+        return new Scanner(
+            uri.substring(
+                externalContentURI.indexOf(externalContentURI) + externalContentURI.length()
+            )
+        ).useDelimiter("[^0-9]+").next();
+    }
+
     @SuppressLint("NewApi")
     public static String getRealPathFromURI_API19(Context context, Uri uri) {
         String filePath = "";
 
         try {
-            String id;
+            String id = null;
 
             if (DocumentsContract.isDocumentUri(context, uri)) {
                 String wholeID = DocumentsContract.getDocumentId(uri);
@@ -93,19 +104,28 @@ public class FileHelper {
                             ? wholeID.split(";")[1]
                             : wholeID;
             } else {
-                final String uriStr = uri.toString();
+                String uriStr = uri.toString();
 
-                if (
-                    uriStr.startsWith(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString()
-                    )
-                ) {
-                    id = uriStr.substring(uriStr.lastIndexOf("/") + 1);
-                } else {
-                    throw new IllegalArgumentException(
-                        "Cannot get real path from uri: " + uriStr
+                if (uriStr.startsWith(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())) {
+                    id = extractDocumentIdFromExternalContentURI(uriStr);
+                } else if (uriStr.lastIndexOf("content%3A%2F") > 0) {
+                    uriStr = URLDecoder.decode(
+                        uriStr.substring(uriStr.lastIndexOf("content%3A%2F")),
+                        "UTF-8"
                     );
+
+                    if (
+                        uriStr.startsWith(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())
+                    ) {
+                        id = extractDocumentIdFromExternalContentURI(uriStr);
+                    }
                 }
+            }
+
+            if (id == null) {
+                throw new IllegalArgumentException(
+                    "Cannot get real path from uri: " + uri
+                );
             }
 
             String[] column = { MediaStore.Images.Media.DATA };
