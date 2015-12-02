@@ -114,7 +114,7 @@ public class FileHelper {
             if (URLUtil.isFileUrl(uri.toString())) {
                 // case 1: the uri is already path to file system
 
-                return uriStr;
+                return URLDecoder.decode(uriStr, "UTF-8");
             } else if (DocumentsContract.isDocumentUri(context, uri)) {
                 // case 2: uri is the a documentUri
 
