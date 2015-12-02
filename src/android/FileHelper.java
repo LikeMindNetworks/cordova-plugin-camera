@@ -25,6 +25,7 @@ import android.os.Build;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.webkit.MimeTypeMap;
+import android.webkit.URLUtil;
 
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.LOG;
@@ -94,8 +95,29 @@ public class FileHelper {
 
         try {
             String id = null;
+            String uriStr = uri.toString();
 
-            if (DocumentsContract.isDocumentUri(context, uri)) {
+            /**
+             * TODO:
+             *
+             * Try to get real file path from content uri is a fundamentally flawed solution.
+             * It breaks the google sandbox between apps and this is going to get worse when
+             * more apps start to implement the permission system correctly.
+             *
+             * Use getContentResolver().openInputStream() and read the file directly could be a
+             * way forward, given that we are copying the image file already.
+             *
+             * These cases below should be considered as temporary fixes util proper implementation
+             * is done.
+             */
+
+            if (URLUtil.isFileUrl(uri.toString())) {
+                // case 1: the uri is already path to file system
+
+                return uriStr;
+            } else if (DocumentsContract.isDocumentUri(context, uri)) {
+                // case 2: uri is the a documentUri
+
                 String wholeID = DocumentsContract.getDocumentId(uri);
 
                 // Split at colon, use second item in the array
@@ -104,22 +126,21 @@ public class FileHelper {
                         : wholeID.indexOf(";") > -1
                             ? wholeID.split(";")[1]
                             : wholeID;
-            } else {
-                String uriStr = uri.toString();
+            } else if (uriStr.startsWith(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())) {
+                // case 3: uri is an external content uri
 
-                if (uriStr.startsWith(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())) {
+                id = extractDocumentIdFromExternalContentURI(uriStr);
+            } else if (uriStr.lastIndexOf("content%3A%2F") > 0) {
+                uriStr = URLDecoder.decode(
+                    uriStr.substring(uriStr.lastIndexOf("content%3A%2F")),
+                    "UTF-8"
+                );
+
+                if (
+                    uriStr.startsWith(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())
+                ) {
+                    // case 4: uri has an embedded external content uri
                     id = extractDocumentIdFromExternalContentURI(uriStr);
-                } else if (uriStr.lastIndexOf("content%3A%2F") > 0) {
-                    uriStr = URLDecoder.decode(
-                        uriStr.substring(uriStr.lastIndexOf("content%3A%2F")),
-                        "UTF-8"
-                    );
-
-                    if (
-                        uriStr.startsWith(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())
-                    ) {
-                        id = extractDocumentIdFromExternalContentURI(uriStr);
-                    }
                 }
             }
 

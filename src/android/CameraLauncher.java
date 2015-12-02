@@ -585,6 +585,29 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // Some content: URIs do not map to file paths (e.g. picasa).
         String realPath = FileHelper.getRealPath(uri, this.cordova);
 
+        //START OF HACK
+        if (realPath.length() == 0) {
+            String copiedFilePath = getTempDirectoryPath() + "/"
+                    + System.currentTimeMillis() + ".copied."
+                    + (this.encodingType == JPEG ? "jpg" : "png");
+
+            InputStream fin = this.cordova.getActivity().getContentResolver().openInputStream(uri);
+            OutputStream fout = new FileOutputStream(copiedFilePath);
+
+            byte[] buf = new byte[1024 * 4];
+            int len;
+
+            while ((len = fin.read(buf)) > 0) {
+                fout.write(buf, 0, len);
+            }
+
+            fin.close();
+            fout.close();
+
+            realPath = copiedFilePath;
+        }
+        //END OF HACK
+
         // Get filename from uri
         String fileName = realPath != null ?
             realPath.substring(realPath.lastIndexOf('/') + 1) :
